@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { stripe, STRIPE_PRICES } from "@/lib/stripe";
+import { getStripe, STRIPE_PRICES } from "@/lib/stripe";
 import { requireAuth, apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
+  let stripe: ReturnType<typeof getStripe>;
+  try {
+    stripe = getStripe();
+  } catch {
+    return NextResponse.json({ error: "Stripe is not configured" }, { status: 503 });
+  }
+
   const { user, error } = await requireAuth();
   if (error) return error;
 

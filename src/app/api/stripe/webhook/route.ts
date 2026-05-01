@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type Stripe from "stripe";
 
 export async function POST(req: Request) {
+  let stripe: ReturnType<typeof getStripe>;
+  try {
+    stripe = getStripe();
+  } catch {
+    return NextResponse.json({ error: "Stripe is not configured" }, { status: 503 });
+  }
+
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
