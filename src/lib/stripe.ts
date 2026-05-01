@@ -19,12 +19,6 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-export const stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return getStripe()[prop as keyof Stripe];
-  },
-});
-
 export const STRIPE_PRICES = {
   scholar: process.env.STRIPE_SCHOLAR_PRICE_ID || "",
   sage: process.env.STRIPE_SAGE_PRICE_ID || "",
