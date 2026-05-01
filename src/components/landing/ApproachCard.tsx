@@ -27,7 +27,11 @@ export default function ApproachCard({
 
   async function handleChoose() {
     if (!isLoggedIn) {
-      router.push(`/auth/signup?redirectTo=${encodeURIComponent("/")}`);
+      localStorage.setItem(
+        "aref_pending_plan",
+        JSON.stringify({ goal, approach, totalHours })
+      );
+      router.push(`/auth/signup`);
       return;
     }
 

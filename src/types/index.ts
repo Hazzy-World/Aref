@@ -68,8 +68,11 @@ export interface ChatMessage {
   content: string;
 }
 
-export const PLAN_LIMITS: Record<Plan, { dailyMinutes: number; maxPlans: number; label: string }> = {
-  seeker: { dailyMinutes: 60, maxPlans: 1, label: "Seeker" },
-  scholar: { dailyMinutes: 480, maxPlans: 5, label: "Scholar" },
-  sage: { dailyMinutes: Infinity, maxPlans: Infinity, label: "Sage" },
+export const PLAN_LIMITS: Record<
+  Plan,
+  { dailyMinutes: number; maxPlans: number; label: string; price: string }
+> = {
+  seeker:  { dailyMinutes: 60,       maxPlans: 1,        label: "Seeker",  price: "Free" },
+  scholar: { dailyMinutes: 480,      maxPlans: 5,        label: "Scholar", price: "$12/mo" },
+  sage:    { dailyMinutes: Infinity, maxPlans: Infinity, label: "Sage",    price: "$39/mo" },
 };

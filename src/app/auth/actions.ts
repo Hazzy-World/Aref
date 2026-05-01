@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+const APP_URL = "https://aref-production.up.railway.app";
+
 export async function signIn(
   _prevState: { error: string } | null,
   formData: FormData
@@ -30,31 +32,13 @@ export async function signUp(
     password: formData.get("password") as string,
     options: {
       data: { full_name: formData.get("name") as string },
+      emailRedirectTo: `${APP_URL}/auth/callback`,
     },
   });
 
   if (error) return { error: error.message };
 
   redirect("/dashboard");
-}
-
-export async function signInWithGoogle(): Promise<void> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    },
-  });
-
-  if (error || !data.url) {
-    redirect(
-      `/auth/login?error=${encodeURIComponent(error?.message ?? "OAuth error")}`
-    );
-  }
-
-  redirect(data.url);
 }
 
 export async function signOut() {

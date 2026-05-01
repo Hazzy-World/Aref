@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import PhaseCard from "@/components/plan/PhaseCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import PlanCard from "@/components/plan/PlanCard";
-import { ArrowLeft, Clock, Layers, Trophy } from "lucide-react";
+import PlanMindMap from "@/components/plan/PlanMindMap";
+import { ArrowLeft, Clock, Layers, Trophy, Flame } from "lucide-react";
 import type { LearningPlan, Phase } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,19 @@ function calcOverallProgress(plan: LearningPlan): number {
     plan.completed_topics as Record<string, string[]>
   ).flat().length;
   return Math.round((done / total) * 100);
+}
+
+function getScheduleStatus(plan: LearningPlan, pct: number): {
+  label: string;
+  color: string;
+} {
+  const createdAt = new Date(plan.created_at).getTime();
+  const daysElapsed = Math.floor((Date.now() - createdAt) / 86_400_000);
+  const expectedPct = Math.min(100, (daysElapsed / plan.total_hours) * 100);
+
+  if (pct >= expectedPct + 10) return { label: "Ahead of schedule", color: "text-success" };
+  if (pct >= expectedPct - 15) return { label: "On track", color: "text-accent" };
+  return { label: "Needs attention", color: "text-amber-400" };
 }
 
 export default async function PlanPage({
@@ -56,6 +70,7 @@ export default async function PlanPage({
   const phases = typedPlan.phases as Phase[];
   const completedTopics = typedPlan.completed_topics as Record<string, string[]>;
   const overallPct = calcOverallProgress(typedPlan);
+  const status = getScheduleStatus(typedPlan, overallPct);
   const completedPhases = phases.filter(
     (p) =>
       (p.topics?.length ?? 0) > 0 &&
@@ -92,29 +107,27 @@ export default async function PlanPage({
           <div className="flex items-center gap-2 text-text-secondary">
             <Clock className="w-4 h-4 text-text-muted" />
             <span>
-              <span className="text-text-primary font-medium">
-                {typedPlan.total_hours}
-              </span>{" "}
+              <span className="text-text-primary font-medium">{typedPlan.total_hours}</span>{" "}
               total hours
             </span>
           </div>
           <div className="flex items-center gap-2 text-text-secondary">
             <Layers className="w-4 h-4 text-text-muted" />
             <span>
-              <span className="text-text-primary font-medium">
-                {phases.length}
-              </span>{" "}
+              <span className="text-text-primary font-medium">{phases.length}</span>{" "}
               phases
             </span>
           </div>
           <div className="flex items-center gap-2 text-text-secondary">
             <Trophy className="w-4 h-4 text-text-muted" />
             <span>
-              <span className="text-text-primary font-medium">
-                {completedPhases}
-              </span>{" "}
+              <span className="text-text-primary font-medium">{completedPhases}</span>{" "}
               phases complete
             </span>
+          </div>
+          <div className={`flex items-center gap-1.5 ${status.color}`}>
+            <Flame className="w-4 h-4" />
+            <span className="text-sm font-medium">{status.label}</span>
           </div>
         </div>
 
@@ -130,22 +143,39 @@ export default async function PlanPage({
         </div>
       </div>
 
+      {/* Mind map */}
+      <div>
+        <h2 className="font-cinzel text-lg font-semibold text-text-primary mb-4">
+          Course Map
+        </h2>
+        <PlanMindMap plan={typedPlan} phases={phases} />
+      </div>
+
       {/* Phases grid */}
       <div>
         <h2 className="font-cinzel text-lg font-semibold text-text-primary mb-4">
           Learning Phases
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {phases.map((phase, idx) => (
-            <PhaseCard
-              key={phase.id}
-              phase={phase}
-              index={idx}
-              planId={typedPlan.id}
-              completedTopics={completedTopics[phase.id] ?? []}
-            />
-          ))}
-        </div>
+        {phases.length === 0 ? (
+          <div className="aref-card p-12 flex flex-col items-center gap-4 text-center">
+            <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+              <Layers className="w-7 h-7 text-text-muted" />
+            </div>
+            <p className="text-text-secondary text-sm">No phases found in this plan.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {phases.map((phase, idx) => (
+              <PhaseCard
+                key={phase.id}
+                phase={phase}
+                index={idx}
+                planId={typedPlan.id}
+                completedTopics={completedTopics[phase.id] ?? []}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Other plans */}

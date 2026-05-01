@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   BookOpen,
   Video,
@@ -11,26 +11,30 @@ import {
   Loader2,
   Send,
   AlertCircle,
-  CheckSquare,
-  Square,
   Hammer,
-  Lock,
   RefreshCw,
+  Download,
+  Brain,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
+  HelpCircle,
 } from "lucide-react";
 import LevelBadge from "@/components/ui/LevelBadge";
 import MarkdownContent from "@/components/ui/MarkdownContent";
 import { useUsageTracker } from "@/hooks/useUsageTracker";
+import { useStreak } from "@/hooks/useStreak";
 import type { Phase, LearningPlan, ChatMessage } from "@/types";
 
 type TabId = "overview" | "books" | "videos" | "articles" | "course" | "coach";
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "overview", label: "Overview", icon: LayoutGrid },
-  { id: "books", label: "Books", icon: BookOpen },
-  { id: "videos", label: "Videos", icon: Video },
-  { id: "articles", label: "Articles", icon: FileText },
-  { id: "course", label: "AI Course", icon: Sparkles },
-  { id: "coach", label: "AI Coach", icon: MessageSquare },
+  { id: "overview",  label: "Overview",  icon: LayoutGrid },
+  { id: "books",     label: "Books",     icon: BookOpen },
+  { id: "videos",    label: "Videos",    icon: Video },
+  { id: "articles",  label: "Articles",  icon: FileText },
+  { id: "course",    label: "AI Course", icon: Sparkles },
+  { id: "coach",     label: "AI Coach",  icon: MessageSquare },
 ];
 
 interface Props {
@@ -41,22 +45,26 @@ interface Props {
   initialCourseContent: string | null;
 }
 
+interface AiProgress {
+  understanding: number;
+  feedback: string;
+  updatedAt: string;
+}
+
+function progressKey(planId: string, phaseIndex: number) {
+  return `aref_progress_${planId}_${phaseIndex}`;
+}
+
 export default function PhaseDetailClient({
   plan,
   phase,
   phaseIndex,
-  userPlan,
   initialCourseContent,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
-  const [completedTopics, setCompletedTopics] = useState<string[]>(
-    (plan.completed_topics as Record<string, string[]>)[phase.id] ?? []
-  );
 
   // AI Course state
-  const [courseContent, setCourseContent] = useState<string | null>(
-    initialCourseContent
-  );
+  const [courseContent, setCourseContent] = useState<string | null>(initialCourseContent);
   const [courseLoading, setCourseLoading] = useState(false);
   const [courseError, setCourseError] = useState<string | null>(null);
 
@@ -67,37 +75,61 @@ export default function PhaseDetailClient({
   const [chatError, setChatError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
-  const isScholarOrSage = userPlan === "scholar" || userPlan === "sage";
+  // AI Progress state
+  const [aiProgress, setAiProgress] = useState<AiProgress | null>(null);
+  const [estimating, setEstimating] = useState(false);
 
+  // Touch streak when user is actively on coach/course tab
+  useStreak(activeTab === "coach" || activeTab === "course");
   useUsageTracker(activeTab === "coach" || activeTab === "course");
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function toggleTopic(topic: string) {
-    const newTopics = completedTopics.includes(topic)
-      ? completedTopics.filter((t) => t !== topic)
-      : [...completedTopics, topic];
+  // Load persisted AI progress
+  useEffect(() => {
+    const raw = localStorage.getItem(progressKey(plan.id, phaseIndex));
+    if (raw) {
+      try {
+        setAiProgress(JSON.parse(raw));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [plan.id, phaseIndex]);
 
-    setCompletedTopics(newTopics);
-
-    const updated = {
-      ...(plan.completed_topics as Record<string, string[]>),
-      [phase.id]: newTopics,
-    };
-
-    await fetch(`/api/plans/${plan.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed_topics: updated }),
-    });
-  }
+  const estimateProgress = useCallback(
+    async (msgs: ChatMessage[]) => {
+      if (msgs.length < 4) return; // need at least 2 exchanges
+      setEstimating(true);
+      try {
+        const res = await fetch("/api/estimate-progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: msgs,
+            phaseTitle: phase.title,
+            topics: phase.topics,
+            level: phase.level,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const prog: AiProgress = { ...data, updatedAt: new Date().toISOString() };
+          setAiProgress(prog);
+          localStorage.setItem(progressKey(plan.id, phaseIndex), JSON.stringify(prog));
+        }
+      } finally {
+        setEstimating(false);
+      }
+    },
+    [phase, plan.id, phaseIndex]
+  );
 
   async function generateCourse() {
     setCourseLoading(true);
     setCourseError(null);
-
     try {
       const res = await fetch("/api/generate-course", {
         method: "POST",
@@ -118,10 +150,7 @@ export default function PhaseDetailClient({
     const content = input.trim();
     if (!content || chatLoading) return;
 
-    const newMessages: ChatMessage[] = [
-      ...messages,
-      { role: "user", content },
-    ];
+    const newMessages: ChatMessage[] = [...messages, { role: "user", content }];
     setMessages(newMessages);
     setInput("");
     setChatLoading(true);
@@ -160,6 +189,14 @@ export default function PhaseDetailClient({
           { role: "assistant", content: reply },
         ]);
       }
+
+      const finalMessages: ChatMessage[] = [
+        ...newMessages,
+        { role: "assistant", content: reply },
+      ];
+
+      // Auto-estimate understanding after a real conversation
+      await estimateProgress(finalMessages);
     } catch (err) {
       setChatError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -167,15 +204,51 @@ export default function PhaseDetailClient({
     }
   }
 
+  function downloadPhaseGuide() {
+    const books = phase.books
+      .map((b) => `  - ${b.title} by ${b.author}\n    ${b.why}`)
+      .join("\n");
+    const videos = phase.videos
+      .map((v) => `  - ${v.title} by ${v.creator} (${v.duration})\n    ${v.why}`)
+      .join("\n");
+
+    const content = [
+      `# ${phase.title}`,
+      `**Level:** ${phase.level} · **Estimated Time:** ${phase.estimatedHours} hours`,
+      "",
+      `## Overview`,
+      phase.description,
+      "",
+      `## Topics`,
+      phase.topics.map((t) => `- ${t}`).join("\n"),
+      "",
+      phase.project ? `## Hands-On Project\n${phase.project}` : "",
+      "",
+      phase.books.length ? `## Recommended Books\n${books}` : "",
+      "",
+      phase.videos.length ? `## Recommended Videos\n${videos}` : "",
+      "",
+      courseContent ? `## AI Course Content\n\n${courseContent}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${phase.title.toLowerCase().replace(/\s+/g, "-")}-guide.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-6">
       {/* Phase header */}
       <div className="aref-card p-5">
         <div className="flex items-start gap-3">
-          <div className="flex flex-col items-center gap-1 shrink-0">
-            <div className="w-10 h-10 rounded-full border-2 border-accent bg-accent/10 flex items-center justify-center font-mono text-sm font-bold text-accent">
-              {String(phaseIndex + 1).padStart(2, "0")}
-            </div>
+          <div className="w-10 h-10 rounded-full border-2 border-accent bg-accent/10 flex items-center justify-center font-mono text-sm font-bold text-accent shrink-0">
+            {String(phaseIndex + 1).padStart(2, "0")}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -197,23 +270,18 @@ export default function PhaseDetailClient({
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
-            const isLocked =
-              (tab.id === "course") && !isScholarOrSage;
             return (
               <button
                 key={tab.id}
-                onClick={() => !isLocked && setActiveTab(tab.id)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
                   isActive
                     ? "border-accent text-accent"
-                    : isLocked
-                    ? "border-transparent text-text-muted cursor-not-allowed"
                     : "border-transparent text-text-muted hover:text-text-secondary hover:border-border"
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-                {isLocked && <Lock className="w-3 h-3 ml-0.5 text-text-muted" />}
               </button>
             );
           })}
@@ -225,8 +293,12 @@ export default function PhaseDetailClient({
         {activeTab === "overview" && (
           <OverviewTab
             phase={phase}
-            completedTopics={completedTopics}
-            onToggle={toggleTopic}
+            aiProgress={aiProgress}
+            estimating={estimating}
+            onProgressUpdate={(p) => {
+              setAiProgress(p);
+              localStorage.setItem(progressKey(plan.id, phaseIndex), JSON.stringify(p));
+            }}
           />
         )}
         {activeTab === "books" && <BooksTab phase={phase} />}
@@ -234,11 +306,11 @@ export default function PhaseDetailClient({
         {activeTab === "articles" && <ArticlesTab phase={phase} />}
         {activeTab === "course" && (
           <CourseTab
-            isScholarOrSage={isScholarOrSage}
             content={courseContent}
             loading={courseLoading}
             error={courseError}
             onGenerate={generateCourse}
+            onDownload={downloadPhaseGuide}
           />
         )}
         {activeTab === "coach" && (
@@ -247,6 +319,7 @@ export default function PhaseDetailClient({
             input={input}
             loading={chatLoading}
             error={chatError}
+            estimating={estimating}
             messagesEndRef={messagesEndRef}
             onInputChange={setInput}
             onSend={sendMessage}
@@ -259,65 +332,284 @@ export default function PhaseDetailClient({
 
 // ─── Tab: Overview ────────────────────────────────────────────────
 
+const LEVEL_RING_COLOR: Record<string, string> = {
+  Beginner:     "#22c55e",
+  Intermediate: "#3b82f6",
+  Advanced:     "#f59e0b",
+  Expert:       "#a855f7",
+};
+
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+}
+
+function ProgressRing({
+  pct,
+  color,
+  size = 96,
+}: {
+  pct: number;
+  color: string;
+  size?: number;
+}) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+
+  return (
+    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#27272a" strokeWidth={6} />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={6}
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={offset}
+        style={{ transition: "stroke-dashoffset 0.8s ease" }}
+      />
+    </svg>
+  );
+}
+
 function OverviewTab({
   phase,
-  completedTopics,
-  onToggle,
+  aiProgress,
+  estimating,
+  onProgressUpdate,
 }: {
   phase: Phase;
-  completedTopics: string[];
-  onToggle: (t: string) => void;
+  aiProgress: AiProgress | null;
+  estimating: boolean;
+  onProgressUpdate: (p: AiProgress) => void;
 }) {
-  const pct = phase.topics?.length
-    ? Math.round((completedTopics.length / phase.topics.length) * 100)
-    : 0;
+  const [quiz, setQuiz] = useState<QuizQuestion[] | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+  const color = LEVEL_RING_COLOR[phase.level] ?? "#b8960c";
+  const pct = aiProgress?.understanding ?? 0;
+
+  async function startQuiz() {
+    setQuizLoading(true);
+    setSubmitted(false);
+    setAnswers([]);
+    try {
+      const res = await fetch("/api/generate-quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phaseTitle: phase.title,
+          topics: phase.topics,
+          level: phase.level,
+        }),
+      });
+      const data = await res.json();
+      setQuiz(data.questions ?? []);
+      setAnswers(new Array((data.questions ?? []).length).fill(null));
+    } finally {
+      setQuizLoading(false);
+    }
+  }
+
+  function submitQuiz() {
+    if (!quiz) return;
+    setSubmitted(true);
+
+    const correct = quiz.filter((q, i) => answers[i] === q.correct).length;
+    const score = Math.round((correct / quiz.length) * 100);
+    const bonus = score >= 75 ? 20 : score >= 50 ? 10 : 0;
+    const newPct = Math.min(100, pct + bonus);
+
+    if (bonus > 0) {
+      const prog: AiProgress = {
+        understanding: newPct,
+        feedback: `Quiz score: ${score}%. +${bonus}% progress added.`,
+        updatedAt: new Date().toISOString(),
+      };
+      onProgressUpdate(prog);
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {/* Topics */}
-      <div className="aref-card p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      {/* AI Progress Card */}
+      <div className="aref-card p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Brain className="w-4 h-4 text-accent" />
           <h3 className="font-cinzel text-base font-semibold text-text-primary">
-            Topics
+            AI Understanding Score
           </h3>
-          <span className="font-mono text-xs text-text-secondary">
-            {completedTopics.length}/{phase.topics?.length ?? 0} · {pct}%
-          </span>
+          {estimating && (
+            <span className="flex items-center gap-1 text-xs text-text-muted ml-auto">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Estimating…
+            </span>
+          )}
         </div>
-        <div className="h-1 bg-surface rounded-full overflow-hidden">
-          <div
-            className="h-full bg-accent rounded-full transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {(phase.topics ?? []).map((topic) => {
-            const done = completedTopics.includes(topic);
-            return (
-              <button
-                key={topic}
-                onClick={() => onToggle(topic)}
-                className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${
-                  done
-                    ? "border-success/30 bg-success/5 text-text-secondary"
-                    : "border-border bg-surface-raised hover:border-accent/30 text-text-secondary"
-                }`}
-              >
-                {done ? (
-                  <CheckSquare className="w-4 h-4 text-success shrink-0" />
-                ) : (
-                  <Square className="w-4 h-4 text-text-muted shrink-0" />
-                )}
-                <span className={`text-sm ${done ? "line-through opacity-60" : ""}`}>
-                  {topic}
-                </span>
-              </button>
-            );
-          })}
+
+        <div className="flex items-center gap-6">
+          <div className="relative shrink-0">
+            <ProgressRing pct={pct} color={color} size={96} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="font-mono text-xl font-bold text-text-primary">
+                {pct}
+              </span>
+              <span className="font-mono text-[9px] text-text-muted">%</span>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-2">
+            <p className="text-text-secondary text-sm leading-relaxed">
+              {aiProgress?.feedback ??
+                "Chat with the AI Coach or take a quiz to get your understanding score."}
+            </p>
+            {aiProgress?.updatedAt && (
+              <p className="text-text-muted text-xs font-mono">
+                Last updated:{" "}
+                {new Date(aiProgress.updatedAt).toLocaleDateString()}
+              </p>
+            )}
+            <button
+              onClick={startQuiz}
+              disabled={quizLoading}
+              className="aref-btn-secondary flex items-center gap-2 text-sm py-2 px-3"
+            >
+              {quizLoading ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating quiz…</>
+              ) : (
+                <><HelpCircle className="w-3.5 h-3.5" /> Take Understanding Quiz</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Project */}
+      {/* Quiz */}
+      {quiz && quiz.length > 0 && (
+        <div className="aref-card p-6 space-y-6">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-accent" />
+            <h3 className="font-cinzel text-base font-semibold text-text-primary">
+              Understanding Quiz
+            </h3>
+          </div>
+
+          {quiz.map((q, qi) => (
+            <div key={qi} className="space-y-3">
+              <p className="text-text-primary text-sm font-medium">
+                {qi + 1}. {q.question}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {q.options.map((opt, oi) => {
+                  const isSelected = answers[qi] === oi;
+                  const isCorrect = oi === q.correct;
+                  const showResult = submitted;
+
+                  let cls =
+                    "p-3 rounded-lg border text-sm text-left transition-all cursor-pointer ";
+                  if (showResult) {
+                    if (isCorrect) cls += "border-success/50 bg-success/10 text-success";
+                    else if (isSelected) cls += "border-red-500/50 bg-red-500/10 text-red-400";
+                    else cls += "border-border text-text-muted cursor-default opacity-50";
+                  } else {
+                    cls += isSelected
+                      ? "border-accent bg-accent/10 text-text-primary"
+                      : "border-border bg-surface-raised text-text-secondary hover:border-accent/40";
+                  }
+
+                  return (
+                    <button
+                      key={oi}
+                      disabled={submitted}
+                      onClick={() => {
+                        if (submitted) return;
+                        const next = [...answers];
+                        next[qi] = oi;
+                        setAnswers(next);
+                      }}
+                      className={cls}
+                    >
+                      <span className="font-mono text-xs mr-2 opacity-60">
+                        {["A", "B", "C", "D"][oi]}.
+                      </span>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+              {submitted && (
+                <div className="flex items-start gap-2 bg-surface-raised border border-border rounded-lg px-3 py-2 text-xs text-text-secondary">
+                  {answers[qi] === q.correct ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                  )}
+                  {q.explanation}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {!submitted ? (
+            <button
+              onClick={submitQuiz}
+              disabled={answers.some((a) => a === null)}
+              className="aref-btn-primary flex items-center gap-2 disabled:opacity-50"
+            >
+              Submit Quiz
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-text-secondary">
+                Score:{" "}
+                <span className="font-semibold text-text-primary">
+                  {quiz.filter((q, i) => answers[i] === q.correct).length}/{quiz.length}
+                </span>
+              </p>
+              <button
+                onClick={startQuiz}
+                className="aref-btn-ghost text-sm flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                New Quiz
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Topics curriculum */}
+      <div className="aref-card p-6 space-y-4">
+        <h3 className="font-cinzel text-base font-semibold text-text-primary">
+          Topics in this Phase
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {(phase.topics ?? []).map((topic, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 p-3 rounded-lg border border-border bg-surface-raised"
+            >
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-mono font-bold shrink-0"
+                style={{ backgroundColor: color + "22", color }}
+              >
+                {i + 1}
+              </span>
+              <span className="text-text-secondary text-sm">{topic}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Hands-on project */}
       {phase.project && (
         <div className="aref-card p-6 space-y-3">
           <div className="flex items-center gap-2">
@@ -337,23 +629,23 @@ function OverviewTab({
 
 function BooksTab({ phase }: { phase: Phase }) {
   if (!phase.books?.length)
-    return <EmptyTabState message="No books for this phase." />;
+    return <EmptyTabState icon={BookOpen} message="No books curated for this phase." />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {phase.books.map((book, i) => (
-        <div key={i} className="aref-card p-5 space-y-2">
+        <div key={i} className="aref-card p-5 flex flex-col gap-3 hover:border-accent/30 transition-colors">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-14 rounded bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
-              <BookOpen className="w-4 h-4 text-accent" />
+            <div className="w-12 h-16 rounded bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/30 flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5 text-accent" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-text-primary font-medium text-sm leading-snug">
+              <p className="text-text-primary font-semibold text-sm leading-snug">
                 {book.title}
               </p>
-              <p className="text-text-muted text-xs mt-0.5">{book.author}</p>
+              <p className="text-accent/80 text-xs mt-1 font-outfit">{book.author}</p>
             </div>
           </div>
-          <p className="text-text-secondary text-sm leading-relaxed border-t border-border pt-2">
+          <p className="text-text-secondary text-sm leading-relaxed border-t border-border pt-3">
             {book.why}
           </p>
         </div>
@@ -366,25 +658,25 @@ function BooksTab({ phase }: { phase: Phase }) {
 
 function VideosTab({ phase }: { phase: Phase }) {
   if (!phase.videos?.length)
-    return <EmptyTabState message="No videos for this phase." />;
+    return <EmptyTabState icon={Video} message="No videos curated for this phase." />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {phase.videos.map((video, i) => (
-        <div key={i} className="aref-card p-5 space-y-2">
+        <div key={i} className="aref-card p-5 flex flex-col gap-3 hover:border-red-500/20 transition-colors">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
-              <Video className="w-4 h-4 text-red-400" />
+            <div className="w-12 h-10 rounded bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
+              <Video className="w-5 h-5 text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-text-primary font-medium text-sm leading-snug">
+              <p className="text-text-primary font-semibold text-sm leading-snug">
                 {video.title}
               </p>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-2 mt-1">
                 <span className="text-text-muted text-xs">{video.creator}</span>
                 {video.duration && (
                   <>
-                    <span className="text-border">·</span>
-                    <span className="font-mono text-[10px] text-text-muted">
+                    <span className="text-border text-xs">·</span>
+                    <span className="font-mono text-[10px] text-text-muted bg-surface-raised px-1.5 py-0.5 rounded">
                       {video.duration}
                     </span>
                   </>
@@ -392,7 +684,7 @@ function VideosTab({ phase }: { phase: Phase }) {
               </div>
             </div>
           </div>
-          <p className="text-text-secondary text-sm leading-relaxed border-t border-border pt-2">
+          <p className="text-text-secondary text-sm leading-relaxed border-t border-border pt-3">
             {video.why}
           </p>
         </div>
@@ -405,23 +697,18 @@ function VideosTab({ phase }: { phase: Phase }) {
 
 function ArticlesTab({ phase }: { phase: Phase }) {
   if (!phase.articles?.length)
-    return <EmptyTabState message="No articles for this phase." />;
+    return <EmptyTabState icon={FileText} message="No articles curated for this phase." />;
   return (
     <div className="grid grid-cols-1 gap-3">
       {phase.articles.map((article, i) => (
-        <div
-          key={i}
-          className="aref-card p-4 flex items-start gap-4"
-        >
-          <div className="w-8 h-8 rounded bg-info/10 border border-info/30 flex items-center justify-center shrink-0">
-            <FileText className="w-4 h-4 text-info" />
+        <div key={i} className="aref-card p-4 flex items-start gap-4 hover:border-blue-500/20 transition-colors">
+          <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+            <FileText className="w-4 h-4 text-blue-400" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-text-primary font-medium text-sm">
-                {article.title}
-              </p>
-              <span className="font-mono text-[10px] text-text-muted whitespace-nowrap shrink-0">
+              <p className="text-text-primary font-medium text-sm">{article.title}</p>
+              <span className="font-mono text-[10px] text-text-muted bg-surface-raised px-2 py-0.5 rounded whitespace-nowrap shrink-0">
                 {article.source}
               </span>
             </div>
@@ -438,58 +725,43 @@ function ArticlesTab({ phase }: { phase: Phase }) {
 // ─── Tab: AI Course ───────────────────────────────────────────────
 
 function CourseTab({
-  isScholarOrSage,
   content,
   loading,
   error,
   onGenerate,
+  onDownload,
 }: {
-  isScholarOrSage: boolean;
   content: string | null;
   loading: boolean;
   error: string | null;
   onGenerate: () => void;
+  onDownload: () => void;
 }) {
-  if (!isScholarOrSage) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-5 text-center">
-        <div className="w-16 h-16 rounded-full border-2 border-accent/30 bg-accent/5 flex items-center justify-center">
-          <Lock className="w-7 h-7 text-accent" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="font-cinzel text-lg font-semibold text-text-primary">
-            Scholar & Sage Feature
-          </h3>
-          <p className="text-text-secondary text-sm max-w-xs">
-            AI Course generation creates a full, structured lesson for this
-            phase — powered by Claude.
-          </p>
-        </div>
-        <a href="/pricing" className="aref-btn-primary flex items-center gap-2">
-          <Sparkles className="w-4 h-4" />
-          Upgrade to unlock
-        </a>
-      </div>
-    );
-  }
-
   if (content) {
     return (
-      <div className="aref-card p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="aref-card p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="aref-label">AI-Generated Course Module</span>
           </div>
-          <button
-            onClick={onGenerate}
-            disabled={loading}
-            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
-            title="Regenerate"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Regenerate
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onDownload}
+              className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary border border-border hover:border-accent/30 px-3 py-1.5 rounded-lg transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download Guide
+            </button>
+            <button
+              onClick={onGenerate}
+              disabled={loading}
+              className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              Regenerate
+            </button>
+          </div>
         </div>
         <MarkdownContent content={content} />
       </div>
@@ -504,18 +776,30 @@ function CourseTab({
           {error}
         </div>
       )}
-      <div className="w-16 h-16 rounded-full border-2 border-dashed border-accent/40 flex items-center justify-center">
-        <Sparkles className="w-7 h-7 text-accent" />
+
+      {/* Illustration */}
+      <div className="relative">
+        <div className="w-20 h-20 rounded-full border-2 border-dashed border-accent/40 flex items-center justify-center">
+          <Sparkles className="w-8 h-8 text-accent" />
+        </div>
+        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
+          <span className="text-accent text-xs font-bold">AI</span>
+        </div>
       </div>
-      <div className="space-y-2">
+
+      <div className="space-y-2 max-w-sm">
         <h3 className="font-cinzel text-lg font-semibold text-text-primary">
           Generate AI Course
         </h3>
-        <p className="text-text-secondary text-sm max-w-xs">
-          AREF will write a complete, structured course module for this phase
-          — covering all topics with exercises and explanations.
+        <p className="text-text-secondary text-sm">
+          AREF will write a complete, structured course module for this phase —
+          covering all topics with exercises and explanations.
+        </p>
+        <p className="text-text-muted text-xs font-mono">
+          Available on all plans · cached after first generation
         </p>
       </div>
+
       <button
         onClick={onGenerate}
         disabled={loading}
@@ -544,6 +828,7 @@ function CoachTab({
   input,
   loading,
   error,
+  estimating,
   messagesEndRef,
   onInputChange,
   onSend,
@@ -552,6 +837,7 @@ function CoachTab({
   input: string;
   loading: boolean;
   error: string | null;
+  estimating: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   onInputChange: (v: string) => void;
   onSend: () => void;
@@ -561,33 +847,29 @@ function CoachTab({
   }
 
   return (
-    <div className="aref-card flex flex-col h-[560px]">
+    <div className="aref-card flex flex-col h-[580px]">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-            <div className="w-12 h-12 rounded-full border-2 border-accent/30 bg-accent/5 flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-accent" />
+          <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
+            <div className="w-14 h-14 rounded-full border-2 border-accent/30 bg-accent/5 flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <p className="text-text-secondary text-sm font-medium">
-                AREF AI Coach
-              </p>
+              <p className="text-text-secondary text-sm font-semibold">AREF AI Coach</p>
               <p className="text-text-muted text-xs mt-1 max-w-xs">
-                Ask anything about this phase. Get specific explanations, examples, and guidance.
+                Ask anything about this phase. Your conversations help estimate your understanding.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <div className="flex flex-wrap gap-2 justify-center">
               {[
                 "Explain the key concepts",
                 "Give me a practical exercise",
-                "What should I focus on first?",
+                "What should I study first?",
               ].map((q) => (
                 <button
                   key={q}
-                  onClick={() => {
-                    onInputChange(q);
-                  }}
+                  onClick={() => onInputChange(q)}
                   className="text-xs bg-surface-raised border border-border hover:border-accent/30 text-text-secondary px-3 py-1.5 rounded-full transition-colors"
                 >
                   {q}
@@ -621,6 +903,13 @@ function CoachTab({
             </div>
           </div>
         ))}
+
+        {estimating && messages.length > 0 && (
+          <div className="flex items-center gap-2 text-text-muted text-xs font-mono justify-center">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Updating understanding score…
+          </div>
+        )}
 
         {error && (
           <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-3 py-2 text-xs">
@@ -659,10 +948,19 @@ function CoachTab({
   );
 }
 
-function EmptyTabState({ message }: { message: string }) {
+function EmptyTabState({
+  icon: Icon,
+  message,
+}: {
+  icon: React.ElementType;
+  message: string;
+}) {
   return (
-    <div className="flex items-center justify-center py-16 text-text-muted text-sm">
-      {message}
+    <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+      <div className="w-14 h-14 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+        <Icon className="w-6 h-6 text-text-muted" />
+      </div>
+      <p className="text-text-muted text-sm">{message}</p>
     </div>
   );
 }

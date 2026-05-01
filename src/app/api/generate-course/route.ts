@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth, apiError } from "@/lib/api-helpers";
 import { anthropic, AREF_MODEL, COURSE_SYSTEM_PROMPT } from "@/lib/anthropic";
-import type { Phase, Plan } from "@/types";
+import type { Phase } from "@/types";
 
 export async function POST(req: Request) {
   const { user, error } = await requireAuth();
@@ -16,22 +16,7 @@ export async function POST(req: Request) {
     return apiError("planId and phaseIndex are required");
   }
 
-  // Fetch user profile — only Scholar/Sage can generate courses
-  const { data: profile } = await supabase
-    .from("users")
-    .select("plan")
-    .eq("id", user.id)
-    .single();
-
-  const userPlan = (profile?.plan ?? "seeker") as Plan;
-  if (userPlan === "seeker") {
-    return apiError(
-      "AI Course generation requires Scholar or Sage plan. Upgrade to unlock.",
-      403
-    );
-  }
-
-  // Fetch the learning plan
+  // Fetch the learning plan (ownership check)
   const { data: plan, error: planError } = await supabase
     .from("learning_plans")
     .select("*")
@@ -85,7 +70,7 @@ Make it thorough, practical, and immediately actionable.`,
     const content =
       message.content[0].type === "text" ? message.content[0].text : "";
 
-    // Cache in DB (upsert handles any race condition)
+    // Cache in DB
     await supabase.from("generated_courses").upsert(
       { plan_id: planId, phase_id: phaseId, content },
       { onConflict: "plan_id,phase_id" }
