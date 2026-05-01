@@ -40,7 +40,7 @@ export default function SavedPlans({ plans }: { plans: LearningPlan[] }) {
               {plans.length} active plan{plans.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Link href="/dashboard" className="gnosis-btn-ghost text-sm flex items-center gap-1.5">
+          <Link href="/dashboard" className="aref-btn-ghost text-sm flex items-center gap-1.5">
             View all
             <ChevronRight className="w-4 h-4" />
           </Link>
@@ -53,7 +53,7 @@ export default function SavedPlans({ plans }: { plans: LearningPlan[] }) {
               <Link
                 key={plan.id}
                 href={`/plan/${plan.id}`}
-                className="gnosis-card p-5 hover:border-accent/40 hover:bg-surface-raised transition-all duration-200 group"
+                className="aref-card p-5 hover:border-accent/40 hover:bg-surface-raised transition-all duration-200 group"
               >
                 <div className="flex items-start gap-3 mb-4">
                   <span className="text-2xl">{plan.approach_icon}</span>

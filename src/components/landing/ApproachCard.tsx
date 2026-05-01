@@ -62,7 +62,7 @@ export default function ApproachCard({
   );
 
   return (
-    <div className="relative gnosis-card flex flex-col h-full hover:border-accent/40 transition-all duration-300 group overflow-hidden">
+    <div className="relative aref-card flex flex-col h-full hover:border-accent/40 transition-all duration-300 group overflow-hidden">
       {/* Recommended badge */}
       {recommended && (
         <div className="absolute top-0 right-0 bg-accent text-background font-mono text-[10px] font-bold px-3 py-1 rounded-bl-lg tracking-wider">
@@ -94,7 +94,7 @@ export default function ApproachCard({
 
         {/* Phases list */}
         <div className="space-y-2">
-          <p className="gnosis-label">Learning Phases</p>
+          <p className="aref-label">Learning Phases</p>
           <div className="space-y-1.5">
             {approach.phases.map((phase, i) => (
               <div
@@ -139,7 +139,7 @@ export default function ApproachCard({
         <button
           onClick={handleChoose}
           disabled={saving}
-          className="w-full gnosis-btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full aref-btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {saving ? (
             <>

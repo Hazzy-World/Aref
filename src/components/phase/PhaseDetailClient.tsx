@@ -170,7 +170,7 @@ export default function PhaseDetailClient({
   return (
     <div className="space-y-6">
       {/* Phase header */}
-      <div className="gnosis-card p-5">
+      <div className="aref-card p-5">
         <div className="flex items-start gap-3">
           <div className="flex flex-col items-center gap-1 shrink-0">
             <div className="w-10 h-10 rounded-full border-2 border-accent bg-accent/10 flex items-center justify-center font-mono text-sm font-bold text-accent">
@@ -275,7 +275,7 @@ function OverviewTab({
   return (
     <div className="space-y-6">
       {/* Topics */}
-      <div className="gnosis-card p-6 space-y-4">
+      <div className="aref-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-cinzel text-base font-semibold text-text-primary">
             Topics
@@ -319,7 +319,7 @@ function OverviewTab({
 
       {/* Project */}
       {phase.project && (
-        <div className="gnosis-card p-6 space-y-3">
+        <div className="aref-card p-6 space-y-3">
           <div className="flex items-center gap-2">
             <Hammer className="w-4 h-4 text-accent" />
             <h3 className="font-cinzel text-base font-semibold text-text-primary">
@@ -341,7 +341,7 @@ function BooksTab({ phase }: { phase: Phase }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {phase.books.map((book, i) => (
-        <div key={i} className="gnosis-card p-5 space-y-2">
+        <div key={i} className="aref-card p-5 space-y-2">
           <div className="flex items-start gap-3">
             <div className="w-10 h-14 rounded bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
               <BookOpen className="w-4 h-4 text-accent" />
@@ -370,7 +370,7 @@ function VideosTab({ phase }: { phase: Phase }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {phase.videos.map((video, i) => (
-        <div key={i} className="gnosis-card p-5 space-y-2">
+        <div key={i} className="aref-card p-5 space-y-2">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
               <Video className="w-4 h-4 text-red-400" />
@@ -411,7 +411,7 @@ function ArticlesTab({ phase }: { phase: Phase }) {
       {phase.articles.map((article, i) => (
         <div
           key={i}
-          className="gnosis-card p-4 flex items-start gap-4"
+          className="aref-card p-4 flex items-start gap-4"
         >
           <div className="w-8 h-8 rounded bg-info/10 border border-info/30 flex items-center justify-center shrink-0">
             <FileText className="w-4 h-4 text-info" />
@@ -465,7 +465,7 @@ function CourseTab({
             phase — powered by Claude.
           </p>
         </div>
-        <a href="/pricing" className="gnosis-btn-primary flex items-center gap-2">
+        <a href="/pricing" className="aref-btn-primary flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
           Upgrade to unlock
         </a>
@@ -475,11 +475,11 @@ function CourseTab({
 
   if (content) {
     return (
-      <div className="gnosis-card p-6 sm:p-8">
+      <div className="aref-card p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
-            <span className="gnosis-label">AI-Generated Course Module</span>
+            <span className="aref-label">AI-Generated Course Module</span>
           </div>
           <button
             onClick={onGenerate}
@@ -512,14 +512,14 @@ function CourseTab({
           Generate AI Course
         </h3>
         <p className="text-text-secondary text-sm max-w-xs">
-          GNOSIS will write a complete, structured course module for this phase
+          AREF will write a complete, structured course module for this phase
           — covering all topics with exercises and explanations.
         </p>
       </div>
       <button
         onClick={onGenerate}
         disabled={loading}
-        className="gnosis-btn-primary flex items-center gap-2 disabled:opacity-60"
+        className="aref-btn-primary flex items-center gap-2 disabled:opacity-60"
       >
         {loading ? (
           <>
@@ -561,7 +561,7 @@ function CoachTab({
   }
 
   return (
-    <div className="gnosis-card flex flex-col h-[560px]">
+    <div className="aref-card flex flex-col h-[560px]">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
@@ -571,7 +571,7 @@ function CoachTab({
             </div>
             <div>
               <p className="text-text-secondary text-sm font-medium">
-                GNOSIS AI Coach
+                AREF AI Coach
               </p>
               <p className="text-text-muted text-xs mt-1 max-w-xs">
                 Ask anything about this phase. Get specific explanations, examples, and guidance.
@@ -641,12 +641,12 @@ function CoachTab({
           disabled={loading}
           placeholder="Ask your coach anything… (⌘↵ to send)"
           rows={2}
-          className="flex-1 gnosis-input resize-none text-sm py-2.5 disabled:opacity-50"
+          className="flex-1 aref-input resize-none text-sm py-2.5 disabled:opacity-50"
         />
         <button
           onClick={onSend}
           disabled={!input.trim() || loading}
-          className="gnosis-btn-primary p-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          className="aref-btn-primary p-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />

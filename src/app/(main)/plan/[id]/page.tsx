@@ -74,7 +74,7 @@ export default async function PlanPage({
       </Link>
 
       {/* Plan header */}
-      <div className="gnosis-card p-6 space-y-5">
+      <div className="aref-card p-6 space-y-5">
         <div className="flex items-start gap-4">
           <span className="text-4xl">{typedPlan.approach_icon}</span>
           <div className="flex-1 min-w-0">
@@ -121,7 +121,7 @@ export default async function PlanPage({
         {/* Overall progress */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="gnosis-label">Overall Progress</span>
+            <span className="aref-label">Overall Progress</span>
             <span className="font-mono text-sm text-text-primary font-semibold">
               {overallPct}%
             </span>

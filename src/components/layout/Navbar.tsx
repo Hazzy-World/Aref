@@ -41,9 +41,14 @@ export default async function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0 group">
-          <span className="font-cinzel text-lg font-bold tracking-[0.2em] text-text-primary group-hover:text-accent transition-colors">
-            GNOSIS
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="font-cinzel text-lg font-bold tracking-[0.2em] text-text-primary group-hover:text-accent transition-colors">
+              AREF
+            </span>
+            <span className="text-[10px] text-text-muted tracking-wide text-right" style={{ fontFamily: "serif", direction: "rtl" }}>
+              عارف
+            </span>
+          </div>
         </Link>
 
         {/* Center nav */}
@@ -51,7 +56,7 @@ export default async function Navbar() {
           {user && (
             <Link
               href="/dashboard"
-              className="gnosis-btn-ghost flex items-center gap-1.5 text-sm"
+              className="aref-btn-ghost flex items-center gap-1.5 text-sm"
             >
               <LayoutDashboard className="w-4 h-4" />
               My Learning
@@ -59,7 +64,7 @@ export default async function Navbar() {
           )}
           <Link
             href="/pricing"
-            className="gnosis-btn-ghost flex items-center gap-1.5 text-sm"
+            className="aref-btn-ghost flex items-center gap-1.5 text-sm"
           >
             <Zap className="w-4 h-4" />
             Plans & Pricing
@@ -98,14 +103,14 @@ export default async function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-2">
-              <Link href="/dashboard" className="gnosis-btn-secondary text-sm py-1.5 px-3 hidden sm:inline-flex items-center gap-1.5">
+              <Link href="/dashboard" className="aref-btn-secondary text-sm py-1.5 px-3 hidden sm:inline-flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5" />
                 Dashboard
               </Link>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="gnosis-btn-ghost text-sm py-1.5 px-3 flex items-center gap-1.5 text-text-muted"
+                  className="aref-btn-ghost text-sm py-1.5 px-3 flex items-center gap-1.5 text-text-muted"
                   title="Sign out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -114,10 +119,10 @@ export default async function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/auth/login" className="gnosis-btn-ghost text-sm py-1.5 px-3">
+              <Link href="/auth/login" className="aref-btn-ghost text-sm py-1.5 px-3">
                 Sign In
               </Link>
-              <Link href="/auth/signup" className="gnosis-btn-primary text-sm py-1.5 px-4">
+              <Link href="/auth/signup" className="aref-btn-primary text-sm py-1.5 px-4">
                 Get Started
               </Link>
             </div>

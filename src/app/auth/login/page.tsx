@@ -36,7 +36,7 @@ function LoginForm() {
         </p>
       </div>
 
-      <div className="gnosis-card p-8 space-y-6">
+      <div className="aref-card p-8 space-y-6">
         {/* Google OAuth */}
         <form action={signInWithGoogle}>
           <button
@@ -63,7 +63,7 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="gnosis-label block">Email</label>
+            <label className="aref-label block">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
@@ -72,13 +72,13 @@ function LoginForm() {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="gnosis-input pl-10"
+                className="aref-input pl-10"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="gnosis-label block">Password</label>
+            <label className="aref-label block">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
@@ -87,7 +87,7 @@ function LoginForm() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="gnosis-input pl-10"
+                className="aref-input pl-10"
               />
             </div>
           </div>
@@ -95,7 +95,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full gnosis-btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full aref-btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -110,7 +110,7 @@ function LoginForm() {
       </div>
 
       <p className="text-center mt-6 text-text-secondary text-sm font-outfit">
-        New to GNOSIS?{" "}
+        New to AREF?{" "}
         <Link
           href="/auth/signup"
           className="text-accent hover:text-accent-light transition-colors font-medium"

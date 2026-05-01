@@ -30,7 +30,7 @@ export default async function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border px-4 py-8 text-center">
-        <p className="font-cinzel text-sm text-text-muted tracking-widest mb-1">GNOSIS</p>
+        <p className="font-cinzel text-sm text-text-muted tracking-widest mb-1">AREF</p>
         <p className="font-mono text-xs text-text-muted">
           AI-Powered Learning · Built for mastery
         </p>

@@ -77,7 +77,7 @@ export default async function PhaseDetailPage({
           {prevIndex !== null && (
             <Link
               href={`/plan/${id}/phase/${prevIndex}`}
-              className="gnosis-btn-ghost py-1.5 px-2 flex items-center gap-1 text-sm"
+              className="aref-btn-ghost py-1.5 px-2 flex items-center gap-1 text-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               Prev
@@ -89,7 +89,7 @@ export default async function PhaseDetailPage({
           {nextIndex !== null && (
             <Link
               href={`/plan/${id}/phase/${nextIndex}`}
-              className="gnosis-btn-ghost py-1.5 px-2 flex items-center gap-1 text-sm"
+              className="aref-btn-ghost py-1.5 px-2 flex items-center gap-1 text-sm"
             >
               Next
               <ChevronRight className="w-4 h-4" />

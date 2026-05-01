@@ -22,12 +22,12 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GNOSIS — AI-Powered Learning",
+  title: "AREF — AI-Powered Learning",
   description:
-    "Unlock mastery with personalized AI learning paths. GNOSIS generates structured learning plans with curated books, videos, and AI-powered courses.",
+    "Unlock mastery with personalized AI learning paths. AREF generates structured learning plans with curated books, videos, and AI-powered courses.",
   keywords: ["learning", "AI", "education", "courses", "personalized learning"],
   openGraph: {
-    title: "GNOSIS — AI-Powered Learning",
+    title: "AREF — AI-Powered Learning",
     description: "Unlock mastery with personalized AI learning paths.",
     type: "website",
   },

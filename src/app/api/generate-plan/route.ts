@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { anthropic, GNOSIS_MODEL, PLAN_SYSTEM_PROMPT } from "@/lib/anthropic";
+import { anthropic, AREF_MODEL, PLAN_SYSTEM_PROMPT } from "@/lib/anthropic";
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     const message = await anthropic.messages.create({
-      model: GNOSIS_MODEL,
+      model: AREF_MODEL,
       max_tokens: 8192,
       system: PLAN_SYSTEM_PROMPT,
       messages: [

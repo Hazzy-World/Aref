@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth, apiError } from "@/lib/api-helpers";
-import { anthropic, GNOSIS_MODEL, COURSE_SYSTEM_PROMPT } from "@/lib/anthropic";
+import { anthropic, AREF_MODEL, COURSE_SYSTEM_PROMPT } from "@/lib/anthropic";
 import type { Phase, Plan } from "@/types";
 
 export async function POST(req: Request) {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   // Generate with Claude
   try {
     const message = await anthropic.messages.create({
-      model: GNOSIS_MODEL,
+      model: AREF_MODEL,
       max_tokens: 4096,
       system: COURSE_SYSTEM_PROMPT,
       messages: [

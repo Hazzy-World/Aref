@@ -10,9 +10,14 @@ export default function AuthLayout({
       {/* Top bar */}
       <header className="px-6 py-4">
         <Link href="/" className="inline-flex items-center gap-2 group">
-          <span className="font-cinzel text-xl font-bold tracking-widest text-text-primary group-hover:text-accent transition-colors">
-            GNOSIS
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="font-cinzel text-xl font-bold tracking-widest text-text-primary group-hover:text-accent transition-colors">
+              AREF
+            </span>
+            <span className="text-[10px] text-text-muted tracking-wide text-right" style={{ fontFamily: "serif", direction: "rtl" }}>
+              عارف
+            </span>
+          </div>
         </Link>
       </header>
 
@@ -28,7 +33,7 @@ export default function AuthLayout({
 
       <footer className="px-6 py-4 text-center">
         <p className="font-mono text-xs text-text-muted">
-          © {new Date().getFullYear()} GNOSIS — AI-Powered Learning
+          © {new Date().getFullYear()} AREF — AI-Powered Learning
         </p>
       </footer>
     </div>

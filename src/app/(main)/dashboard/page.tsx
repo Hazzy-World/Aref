@@ -52,12 +52,12 @@ export default async function DashboardPage() {
         </div>
 
         {canAddPlan ? (
-          <Link href="/" className="gnosis-btn-primary flex items-center gap-2 shrink-0">
+          <Link href="/" className="aref-btn-primary flex items-center gap-2 shrink-0">
             <Plus className="w-4 h-4" />
             New Plan
           </Link>
         ) : (
-          <Link href="/pricing" className="gnosis-btn-secondary flex items-center gap-2 shrink-0 text-sm">
+          <Link href="/pricing" className="aref-btn-secondary flex items-center gap-2 shrink-0 text-sm">
             <Sparkles className="w-4 h-4 text-accent" />
             Upgrade for more plans
           </Link>
@@ -77,7 +77,7 @@ export default async function DashboardPage() {
 
       {/* Plan limit notice */}
       {!canAddPlan && (
-        <div className="mt-8 p-4 gnosis-card flex items-center gap-4">
+        <div className="mt-8 p-4 aref-card flex items-center gap-4">
           <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center shrink-0">
             <BookOpen className="w-5 h-5 text-accent" />
           </div>
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
               Upgrade to Scholar or Sage to add unlimited learning plans.
             </p>
           </div>
-          <Link href="/pricing" className="gnosis-btn-primary text-sm py-2 px-4 shrink-0">
+          <Link href="/pricing" className="aref-btn-primary text-sm py-2 px-4 shrink-0">
             Upgrade
           </Link>
         </div>
@@ -109,10 +109,10 @@ function EmptyState() {
           No learning plans yet
         </h2>
         <p className="text-text-secondary text-sm max-w-xs">
-          Tell GNOSIS what you want to master and get a personalised path in seconds.
+          Tell AREF what you want to master and get a personalised path in seconds.
         </p>
       </div>
-      <Link href="/" className="gnosis-btn-primary flex items-center gap-2">
+      <Link href="/" className="aref-btn-primary flex items-center gap-2">
         <Sparkles className="w-4 h-4" />
         Generate my first plan
       </Link>

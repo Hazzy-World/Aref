@@ -39,11 +39,11 @@ export default function SignupPage() {
           Begin Your Journey
         </h1>
         <p className="text-text-secondary font-outfit">
-          Create your GNOSIS account — it&apos;s free
+          Create your AREF account — it&apos;s free
         </p>
       </div>
 
-      <div className="gnosis-card p-8 space-y-6">
+      <div className="aref-card p-8 space-y-6">
         {/* Google OAuth */}
         <form action={signInWithGoogle}>
           <button
@@ -70,7 +70,7 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="gnosis-label block">Full Name</label>
+            <label className="aref-label block">Full Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
@@ -79,13 +79,13 @@ export default function SignupPage() {
                 required
                 autoComplete="name"
                 placeholder="Your name"
-                className="gnosis-input pl-10"
+                className="aref-input pl-10"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="gnosis-label block">Email</label>
+            <label className="aref-label block">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
@@ -94,13 +94,13 @@ export default function SignupPage() {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="gnosis-input pl-10"
+                className="aref-input pl-10"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="gnosis-label block">Password</label>
+            <label className="aref-label block">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
@@ -110,7 +110,7 @@ export default function SignupPage() {
                 minLength={8}
                 autoComplete="new-password"
                 placeholder="Min. 8 characters"
-                className="gnosis-input pl-10"
+                className="aref-input pl-10"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full gnosis-btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full aref-btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -132,7 +132,7 @@ export default function SignupPage() {
         </form>
 
         <div className="pt-2 border-t border-border space-y-2">
-          <p className="gnosis-label">Free plan includes</p>
+          <p className="aref-label">Free plan includes</p>
           <ul className="space-y-1.5">
             {[
               "1 active learning plan",

@@ -31,7 +31,7 @@ export default function PlanCard({ plan }: { plan: LearningPlan }) {
   return (
     <Link
       href={`/plan/${plan.id}`}
-      className="gnosis-card p-6 flex flex-col gap-4 hover:border-accent/40 transition-all duration-200 group"
+      className="aref-card p-6 flex flex-col gap-4 hover:border-accent/40 transition-all duration-200 group"
     >
       {/* Header */}
       <div className="flex items-start gap-3">
@@ -50,7 +50,7 @@ export default function PlanCard({ plan }: { plan: LearningPlan }) {
       {/* Progress */}
       <div className="space-y-1.5">
         <div className="flex justify-between">
-          <span className="gnosis-label">Progress</span>
+          <span className="aref-label">Progress</span>
           <span className="font-mono text-xs text-text-secondary">{pct}%</span>
         </div>
         <ProgressBar value={pct} />

@@ -159,7 +159,7 @@ export default function PricingPage() {
           return (
             <div
               key={plan.id}
-              className={`relative gnosis-card flex flex-col ${
+              className={`relative aref-card flex flex-col ${
                 plan.highlight
                   ? "border-accent/50 bg-surface-raised ring-1 ring-accent/20"
                   : ""
@@ -233,8 +233,8 @@ export default function PricingPage() {
                     href={plan.ctaHref}
                     className={`w-full block text-center py-3 rounded-lg font-semibold transition-all ${
                       plan.highlight
-                        ? "gnosis-btn-primary"
-                        : "gnosis-btn-secondary"
+                        ? "aref-btn-primary"
+                        : "aref-btn-secondary"
                     }`}
                   >
                     {plan.cta}
@@ -247,8 +247,8 @@ export default function PricingPage() {
                     disabled={!!loading}
                     className={`w-full py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${
                       plan.highlight
-                        ? "gnosis-btn-primary"
-                        : "gnosis-btn-secondary"
+                        ? "aref-btn-primary"
+                        : "aref-btn-secondary"
                     }`}
                   >
                     {isLoading ? (
@@ -274,7 +274,7 @@ export default function PricingPage() {
           { title: "Secure payments", body: "Payments processed securely by Stripe. We never store card details." },
           { title: "Instant access", body: "Your plan upgrades immediately after payment. No waiting." },
         ].map((item) => (
-          <div key={item.title} className="gnosis-card p-5 space-y-2">
+          <div key={item.title} className="aref-card p-5 space-y-2">
             <p className="font-cinzel text-sm font-semibold text-text-primary">{item.title}</p>
             <p className="text-text-muted text-xs leading-relaxed">{item.body}</p>
           </div>

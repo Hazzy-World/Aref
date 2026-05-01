@@ -122,7 +122,7 @@ export default function GeneratePlanFlow({ isLoggedIn }: Props) {
           </h1>
 
           <p className="text-text-secondary text-lg max-w-xl mx-auto mb-10 font-outfit">
-            GNOSIS builds a complete, personalised learning path with curated books,
+            AREF builds a complete, personalised learning path with curated books,
             videos, and AI-generated courses — in seconds.
           </p>
 
@@ -138,7 +138,7 @@ export default function GeneratePlanFlow({ isLoggedIn }: Props) {
                   disabled={stage === "generating"}
                   placeholder="e.g. Learn machine learning from scratch to build real-world models…"
                   rows={3}
-                  className="gnosis-input resize-none text-base leading-relaxed pr-4 disabled:opacity-50 w-full"
+                  className="aref-input resize-none text-base leading-relaxed pr-4 disabled:opacity-50 w-full"
                 />
                 <p className="absolute bottom-3 right-3 font-mono text-[10px] text-text-muted pointer-events-none">
                   ⌘↵ to generate
@@ -148,7 +148,7 @@ export default function GeneratePlanFlow({ isLoggedIn }: Props) {
               <button
                 onClick={handleGenerate}
                 disabled={!goal.trim() || stage === "generating"}
-                className="gnosis-btn-primary px-10 py-3.5 text-base flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="aref-btn-primary px-10 py-3.5 text-base flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {stage === "generating" ? (
                   <>
@@ -179,7 +179,7 @@ export default function GeneratePlanFlow({ isLoggedIn }: Props) {
                   {loadingMsg}
                 </p>
                 <p className="text-text-muted text-sm font-mono">
-                  GNOSIS is building your personalised paths
+                  AREF is building your personalised paths
                 </p>
               </div>
               <div className="flex gap-1.5">
@@ -201,7 +201,7 @@ export default function GeneratePlanFlow({ isLoggedIn }: Props) {
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <span className="text-sm">{error}</span>
               </div>
-              <button onClick={handleReset} className="gnosis-btn-secondary flex items-center gap-2 text-sm">
+              <button onClick={handleReset} className="aref-btn-secondary flex items-center gap-2 text-sm">
                 <RotateCcw className="w-4 h-4" />
                 Try again
               </button>
@@ -246,7 +246,7 @@ export default function GeneratePlanFlow({ isLoggedIn }: Props) {
             <div className="text-center">
               <button
                 onClick={handleReset}
-                className="gnosis-btn-ghost flex items-center gap-2 text-sm mx-auto"
+                className="aref-btn-ghost flex items-center gap-2 text-sm mx-auto"
               >
                 <RotateCcw className="w-4 h-4" />
                 Start over with a different goal

@@ -26,7 +26,7 @@ export default function PhaseCard({
   return (
     <Link
       href={`/plan/${planId}/phase/${index}`}
-      className="gnosis-card p-5 flex flex-col gap-4 hover:border-accent/40 transition-all duration-200 group"
+      className="aref-card p-5 flex flex-col gap-4 hover:border-accent/40 transition-all duration-200 group"
     >
       {/* Header row */}
       <div className="flex items-start gap-3">
@@ -71,7 +71,7 @@ export default function PhaseCard({
       {/* Progress */}
       <div className="space-y-1.5">
         <div className="flex justify-between">
-          <span className="gnosis-label">
+          <span className="aref-label">
             {done}/{total} topics
           </span>
           <span className="font-mono text-[10px] text-text-secondary">{pct}%</span>

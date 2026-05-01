@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth, apiError } from "@/lib/api-helpers";
-import { anthropic, GNOSIS_MODEL, buildCoachSystemPrompt } from "@/lib/anthropic";
+import { anthropic, AREF_MODEL, buildCoachSystemPrompt } from "@/lib/anthropic";
 import type { ChatMessage, Plan } from "@/types";
 import { PLAN_LIMITS } from "@/types";
 
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 
   // Stream the response
   const stream = anthropic.messages.stream({
-    model: GNOSIS_MODEL,
+    model: AREF_MODEL,
     max_tokens: 1024,
     system: systemPrompt,
     messages: messages.map((m) => ({

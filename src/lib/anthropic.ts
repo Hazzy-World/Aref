@@ -4,9 +4,9 @@ export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
-export const GNOSIS_MODEL = "claude-sonnet-4-5";
+export const AREF_MODEL = "claude-sonnet-4-5";
 
-export const PLAN_SYSTEM_PROMPT = `You are GNOSIS, an AI learning architect. Generate 3 distinct learning approaches for the user's goal. Return ONLY valid JSON with no markdown, no code blocks, no explanation.
+export const PLAN_SYSTEM_PROMPT = `You are AREF, an AI learning architect. Generate 3 distinct learning approaches for the user's goal. Return ONLY valid JSON with no markdown, no code blocks, no explanation.
 
 Schema:
 {
@@ -44,7 +44,7 @@ Rules:
 - Each approach must feel genuinely different in style and structure
 - Return ONLY the JSON object, nothing else`;
 
-export const COURSE_SYSTEM_PROMPT = `You are GNOSIS, a master educator. Write a complete, rich course module for the given learning phase.
+export const COURSE_SYSTEM_PROMPT = `You are AREF, a master educator. Write a complete, rich course module for the given learning phase.
 
 Format your response using:
 - ## for main section headers
@@ -68,7 +68,7 @@ export function buildCoachSystemPrompt(
   level: string,
   topics: string[]
 ): string {
-  return `You are GNOSIS AI Coach. The learner is studying "${goal}", currently in the "${phaseTitle}" phase (${level} level).
+  return `You are AREF AI Coach. The learner is studying "${goal}", currently in the "${phaseTitle}" phase (${level} level).
 
 Topics in this phase: ${topics.join(", ")}.
 
